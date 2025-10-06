@@ -1,11 +1,58 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect } from 'react';
+import { Topbar } from '@/components/Topbar';
+import { Sidebar } from '@/components/Sidebar';
+import { Editor } from '@/components/Editor';
+import { CanvasView } from '@/components/CanvasView';
+import { ChatPanel } from '@/components/ChatPanel';
+import { useStore } from '@/store/useStore';
 
 const Index = () => {
+  const { view, setView, toggleChat, setCurrentNote, addNote } = useStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+N - New note
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        const newNote = {
+          id: Date.now().toString(),
+          title: 'Untitled',
+          content: '# New Note\n\nStart typing...',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        addNote(newNote);
+        setCurrentNote(newNote.id);
+        setView('editor');
+      }
+
+      // Ctrl+P - Search (focus search input)
+      if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        searchInput?.focus();
+      }
+
+      // Ctrl+Shift+A - Toggle AI chat
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        toggleChat();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [addNote, setCurrentNote, setView, toggleChat]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="h-screen flex flex-col overflow-hidden">
+      <Topbar />
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 flex overflow-hidden">
+          {view === 'editor' ? <Editor /> : <CanvasView />}
+        </main>
+        <ChatPanel />
       </div>
     </div>
   );
